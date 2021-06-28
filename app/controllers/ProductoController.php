@@ -33,11 +33,16 @@ class ProductoController implements IApiUsable{
         $producto = new productoORM();
         return $producto->find($id)->estacion;
     }
+
+  public static  function GetProducto($id)
+    {
+        $producto = new productoORM();
+        return $producto->find($id);
+    }
         
 
     public function CargarUno($request, $response, $args)
     {
-      // Creamos el usuario
       $parametros = $request->getParsedBody();
       $producto = new ProductoORM();
       $producto->nombre = $parametros['nombre'];

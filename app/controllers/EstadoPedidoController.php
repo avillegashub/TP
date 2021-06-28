@@ -73,8 +73,6 @@ class EstadoPedidoController implements IApiUsable{
     $estadoPedido->estado = "Servir";
     $estadoPedido->finalizada_preparacion = (new DateTime())->getTimestamp ( );
     $estadoPedido->tiempo_real = ($estadoPedido->comienzo_preparacion+$estadoPedido->tiempo_estimado) - (new DateTime())->getTimestamp ( );
-  
-
     $estadoPedido->save();
 
   }

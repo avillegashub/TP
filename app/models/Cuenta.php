@@ -16,6 +16,6 @@ class Cuenta extends Model{
 
     const DELETED_AT = 'fechaBaja';
 
-    protected $fillable = ['id_usuario','id_mesa','id_mozo'];
+    protected $fillable = ['id_cliente','id_mesa','id_mozo', 'monto'];
     
 }

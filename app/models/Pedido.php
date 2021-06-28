@@ -16,7 +16,7 @@ class Pedido extends Model{
 
     const DELETED_AT = 'fechaBaja';
 
-    protected $fillable = ['id_cuenta', 'id_producto'];
+    protected $fillable = ['id_cuenta', 'id_producto', 'estado', 'estacion', 'id_empleado', 'tiempo_estimado', 'comienzo_preparacion', ' finalizada_preparacion'];
 
 
 

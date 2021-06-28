@@ -49,7 +49,7 @@ class ProductoCSV
         }
         return NULL;
     }
-    public static function TraePorId()
+    public static function TraePorId($id)
     {
         parse_str($_SERVER['QUERY_STRING'], $arr);
         $lista = self::load();

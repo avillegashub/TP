@@ -1,6 +1,8 @@
 <?php
 
 include_once './controllers/UsuarioController.php';
+include_once './models/EstadoUsuario.php';
+include_once './models/Mesa.php';
 include_once './controllers/EstadoUsuarioController.php';
 include_once 'AutentificadorJWT.php';
 
@@ -12,81 +14,31 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
+use \App\Models\EstadoUsuario as estadoUsuarioORM;
+
+use \App\Models\Mesa as mesaORM;
+
 
 
 class MiddleWares
 {
   
 
-    public static function MostrarUno(Request $request, RequestHandler $handler) : Response
-    {
-
-        echo "MostrarUno-1   <br>";
-        
-        $response =  $handler->handle($request);
-        
-        echo "<br>";
-        echo "<br>";
-        
-        var_dump($response);
-        echo "<br>";
-        echo "<br>";
-        
-        $contenidoAPI = (string) $response->getBody();
-        
-        $response = new Response();
-        
-        $response->getBody()->write("GETBODY 1 ENTRA");
-        echo "MostrarUno-2<br>";
-
-        $response->getBody()->write(" {$contenidoAPI} <br> ");
-
-        return $response;
-    }
-
-    public static function MostrarDos(Request $request, RequestHandler $handler) : Response
-    {
-
-        echo "MostrarDos-1   <br>";
-        
-        
-        $response =  $handler->handle($request);
-
-        $response->getBody()->write("GETBODY 2 ENTRA");
-        
-        echo "<br>";
-        echo "<br>";
-        
-        var_dump($response);
-        echo "<br>";
-        echo "<br>";
-
-        $contenidoAPI = (string) $response->getBody();
-        
-        $response = new Response();
-        
-        echo "MostrarDos-2   <br>";
-
-        $response->getBody()->write("<br> {$contenidoAPI} <br> ");
-
-        return $response;
-    }
 
     public function VerificarUsuario(Request $request, RequestHandler $handler) : Response {
-        
-       
-		$objDelaRespuesta= new stdclass();
-		$objDelaRespuesta->respuesta="";
-        $response = new Response();
-        
 
-	
+       
+            $response = new Response();
 			$datos = UsuarioController::LogIn($request);
+            $estado = new estadoUsuarioORM();
+            $estado = estadoUsuarioORM::where('id_usuario', $datos['id'])->first() ;
             if(isset($datos['usuario']))
             {
-                //Inserto un EstadoUsuario
-                EstadoUsuarioController::AltaEstadoUsuario($datos);
-                $token= AutentificadorJWT::CrearToken($datos);
+                if(!(isset($estado['estado']) && $estado->estado == 'LoggedIn'))
+                {
+                    EstadoUsuarioController::AltaEstadoUsuario($datos);
+                }
+               $token= AutentificadorJWT::CrearToken($datos);
                 $response->getBody()->write("{$token}");	
                 return $response;   
             }
@@ -96,10 +48,8 @@ class MiddleWares
 
     public function VerificarJWT(Request $request, RequestHandler $handler) : Response {
 
-       // var_dump($_SERVER);
-        if($_SERVER["REQUEST_URI"] != 'app/login' && $_SERVER["REQUEST_METHOD"] != "GET")
+        if($_SERVER["REQUEST_URI"] != 'app/log' && $_SERVER["REQUEST_METHOD"] != "GET")
         {
-            
             $response = new Response();
             $jwt = $request->getHeaderLine('Authorization');
             try{
@@ -126,7 +76,7 @@ class MiddleWares
             $token = trim(explode("Bearer", $jwt)[1]);
             AutentificadorJWT::VerificarToken($token);
             $payload = array('data'=>AutentificadorJWT::ObtenerData($token));
-            if($payload['data']->tipo == 'Admin')
+            if($payload['data']->tipo == 'admin')
             {
                 $response =  $handler->handle($request);
             }else
@@ -141,8 +91,96 @@ class MiddleWares
         return $response;   
 	}
 
-    public function VerificarNombreUsuario(Request $request, RequestHandler $handler) : Response {
+    public function VerificarEmpleado(Request $request, RequestHandler $handler) : Response {
         
-  
-    }
+        $response = new Response();
+        $jwt = $request->getHeaderLine('Authorization');
+        
+        try{
+            $token = trim(explode("Bearer", $jwt)[1]);
+            AutentificadorJWT::VerificarToken($token);
+            $payload = array('data'=>AutentificadorJWT::ObtenerData($token));
+            if($payload['data']->tipo != 'cliente')
+            {
+                $response =  $handler->handle($request);
+            }else
+            {
+                throw new Exception("Acceso Restringido");
+            }
+        }
+        catch(Exception $e){
+            $response->getBody()->write(json_encode(array('error'=>$e->getMessage()))); 
+            return $response;
+        }
+        return $response;   
+	}
+    
+    public function VerificarSocio(Request $request, RequestHandler $handler) : Response {
+        
+        $response = new Response();
+        $jwt = $request->getHeaderLine('Authorization');
+        
+        try{
+            $token = trim(explode("Bearer", $jwt)[1]);
+            AutentificadorJWT::VerificarToken($token);
+            $payload = array('data'=>AutentificadorJWT::ObtenerData($token));
+            if($payload['data']->tipo == 'socio')
+            {
+                $response =  $handler->handle($request);
+            }else
+            {
+                throw new Exception("Acceso Restringido");
+            }
+        }
+        catch(Exception $e){
+            $response->getBody()->write(json_encode(array('error'=>$e->getMessage()))); 
+            return $response;
+        }
+        return $response;   
+	}
+    public function VerificarMozo(Request $request, RequestHandler $handler) : Response {
+        
+        $response = new Response();
+        $jwt = $request->getHeaderLine('Authorization');
+        
+        try{
+            $token = trim(explode("Bearer", $jwt)[1]);
+            AutentificadorJWT::VerificarToken($token);
+            $payload = array('data'=>AutentificadorJWT::ObtenerData($token));
+            if($payload['data']->tipo == 'mozo')
+            {
+                $response =  $handler->handle($request);
+            }else
+            {
+                throw new Exception("No Es mozo");
+            }
+        }
+        catch(Exception $e){
+            $response->getBody()->write($e->getMessage()); 
+            return $response;
+        }
+        return $response;   
+	}
+
+    public function VerificarMesa(Request $request, RequestHandler $handler) : Response {
+        
+        $response = new Response();
+        try{
+            $mesa = mesaORM::findOrFail($request->getParsedBody()['id_mesa']);
+            if($mesa->estado == 1)
+            {
+                $response =  $handler->handle($request);
+            }
+            else{
+                throw new Exception();
+            }
+        }
+        catch(Exception){
+            $response->getBody()->write(json_encode(array('error'=>'Mesa No Disponible'))); 
+            return $response;
+        }
+        return $response;   
+	}
+
+    
 }

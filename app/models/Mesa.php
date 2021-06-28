@@ -16,7 +16,7 @@ class Mesa extends Model{
 
     const DELETED_AT = 'fechaBaja';
 
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombre','estado'];
 /*
 class Mesa
 {
